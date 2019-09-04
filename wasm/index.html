@@ -1,0 +1,54 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="./wasm_exec.js"></script>
+    <script lang="javascript">
+        async function init() {
+            const file = await fetch("./main.wasm");
+            const buffer = await file.arrayBuffer();
+            const go = new Go();
+            const { instance } = await WebAssembly.instantiate(buffer, go.importObject);
+            go.run(instance);
+
+            var canvas = document.getElementById('screen');
+            var width = canvas.width;
+            var height = canvas.height;
+
+            if (canvas.getContext) {
+                var ctx = canvas.getContext('2d');
+
+                let byteSize = width * height * 4;
+                // var pointer = module.alloc(byteSize);
+
+                var usub = new Uint8ClampedArray(mod.exports.memory.buffer, pointer, byteSize);
+                var img = new ImageData(usub, width, height);
+
+                var start = null;
+                function step(timestamp) {
+                    if (start === null) start = timestamp;
+                    // module.fill(pointer, width, height, timestamp);
+
+                    start = timestamp - start;
+                    window.requestAnimationFrame(draw);
+                }
+
+                function draw() {
+                    ctx.putImageData(img, 0, 0)
+                    window.requestAnimationFrame(step);
+                }
+
+                window.requestAnimationFrame(step);
+            }
+        }
+        init();
+    </script>
+</head>
+
+<body>
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)">
+        <canvas id="screen" width="800px" height="600px"></canvas>
+    </div>
+</body>
+
+</html>
