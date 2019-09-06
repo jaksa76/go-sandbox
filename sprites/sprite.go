@@ -1,6 +1,7 @@
-package sprite
+package main
 
 import (
+	"fmt"
 	"image"
 )
 
@@ -107,8 +108,28 @@ func (s SimpleSprite) Bounds() rect {
 		float32(s.img.Bounds().Max.Y - s.img.Bounds().Max.Y)}
 }
 
-func (s SimpleSprite) Draw(t Transform, rgba *image.RGBA) {
+func (s SimpleSprite) Draw(t Transform, canvas *image.RGBA) {
+	spriteBounds := s.img.Bounds()
+	fmt.Printf("Sprite bounds: %v\n", spriteBounds)
+	fmt.Printf("s.x: %v\n", s.x)
 
+	canvasBounds := canvas.Bounds()
+
+	for x := canvasBounds.Min.X; x < canvasBounds.Max.X; x++ {
+		for y := canvasBounds.Min.Y; y < canvasBounds.Max.Y; y++ {
+			base := y*canvas.Stride + x*4
+
+			// canvas.Pix[base] = 100
+			sx := int((float32(x) + t.offsetX) / t.scaleX)
+			sy := int((float32(y) + t.offsetY) / t.scaleY)
+			if sx > spriteBounds.Min.X && sx < spriteBounds.Max.X && sy > spriteBounds.Min.Y && sy < spriteBounds.Max.Y {
+				srcBase := sy*s.img.Stride + sx*4
+				canvas.Pix[base] = s.img.Pix[srcBase]
+				canvas.Pix[base+1] = s.img.Pix[srcBase+1]
+				canvas.Pix[base+2] = s.img.Pix[srcBase+2]
+			}
+		}
+	}
 }
 
 func NewSprite(srcImg *image.Image) Sprite {

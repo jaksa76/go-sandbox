@@ -1,4 +1,4 @@
-package sprite
+package main
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"image/png"
 	"os"
 	"testing"
+
+	"gopkg.in/fogleman/gg.v1"
 )
 
 var (
@@ -27,10 +29,11 @@ func TestSprite(t *testing.T) {
 		var srcAsImg image.Image = src
 		s := NewSprite(&srcAsImg)
 
-		assertEquals(white, s.img.At(0, 0), t)
-		assertEquals(red, s.img.At(0, 1), t)
-		assertEquals(red, s.img.At(1, 0), t)
-		assertEquals(white, s.img.At(1, 1), t)
+		ss := s.(SimpleSprite)
+		assertEquals(white, ss.img.At(0, 0), t)
+		assertEquals(red, ss.img.At(0, 1), t)
+		assertEquals(red, ss.img.At(1, 0), t)
+		assertEquals(white, ss.img.At(1, 1), t)
 	})
 
 	t.Run("copying source image with offset", func(t *testing.T) {
@@ -43,7 +46,7 @@ func TestSprite(t *testing.T) {
 		src.Set(2, 1, red)
 
 		var srcAsImg = src.SubImage(image.Rect(1, 0, 3, 2))
-		s := NewSprite(&srcAsImg)
+		s := NewSprite(&srcAsImg).(SimpleSprite)
 
 		assertEquals(red, s.img.At(0, 0), t)
 		assertEquals(white, s.img.At(0, 1), t)
@@ -67,6 +70,37 @@ func TestSprite(t *testing.T) {
 
 		NewSprite(&img)
 	})
+}
+
+func TestAndWriteImage(t *testing.T) {
+	s := NewSprite(loadImage("./alien.png"))
+	ss := s.(SimpleSprite)
+	ss.x = 100
+
+	canvas := image.NewRGBA(image.Rect(0, 0, 640, 480))
+	camera := Transform{0, 0, 0, 1, 1}
+	s.Draw(camera, canvas)
+
+	dc := gg.NewContext(1000, 1000)
+	dc.SetColor(color.RGBA{0, 0, 50, 255})
+	dc.DrawRectangle(0, 0, 1000, 1000)
+	dc.Fill()
+	dc.DrawImage(canvas, 0, 0)
+	dc.SavePNG("out.png")
+}
+
+func TestOnScreen(t *testing.T) {
+	img := loadImage("./alien.png")
+	fmt.Printf("img: %v\n", *img)
+
+	s := NewSprite(img)
+	ss := s.(SimpleSprite)
+	ss.x = 100
+
+	canvas := image.NewRGBA(image.Rect(0, 0, 640, 480))
+	camera := Transform{0, 0, 0, 1, 1}
+	s.Draw(camera, canvas)
+
 }
 
 func assertEquals(c1, c2 color.Color, t *testing.T) {
